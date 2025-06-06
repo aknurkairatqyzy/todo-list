@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+  <meta charset="UTF-8">
+  <title>Апталық тапсырмалар</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #eef4ff;
+      padding: 30px;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 5px;
+      color: #2e3a4e;
+    }
+
+    .quote {
+      text-align: center;
+      font-style: italic;
+      color: #3a4a6b;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      max-width: 1000px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+      overflow: hidden;
+    }
+
+    th, td {
+      padding: 10px;
+      text-align: center;
+      border-bottom: 1px solid #eee;
+    }
+
+    th {
+      background: #2e7bd3;
+      color: white;
+    }
+
+    input[type="checkbox"] {
+      transform: scale(1.3);
+      cursor: pointer;
+    }
+
+    .percentage {
+      font-weight: bold;
+    }
+
+    .controls {
+      text-align: center;
+      margin: 20px;
+    }
+
+    button {
+      background-color: #2e7bd3;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 5px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    button:hover {
+      background-color: #1d5ca2;
+    }
+
+    .delete-btn {
+      background: crimson;
+    }
+
+    .delete-btn:hover {
+      background: darkred;
+    }
+  </style>
+</head>
+<body>
+
+<h1>Апталық тапсырмалар</h1>
+<div class="quote" id="dailyQuote"></div>
+
+<div class="controls">
+  <button onclick="addTask()">+ Тапсырма қосу</button>
+</div>
+
+<table id="todoTable">
+  <thead>
+    <tr>
+      <th>Тапсырма</th>
+      <th>Дүйсенбі</th>
+      <th>Сейсенбі</th>
+      <th>Сәрсенбі</th>
+      <th>Бейсенбі</th>
+      <th>Жұма</th>
+      <th>Сенбі</th>
+      <th>Жексенбі</th>
+      <th>%</th>
+      <th></th>
+    </tr>
+  </thead>
+  <tbody id="taskBody">
+    <!-- Тапсырмалар осында қосылады -->
+  </tbody>
+</table>
+
+<script>
+  const quotes = [
+    "Бүгінгі іс — ертеңгі жетістік бастауы.",
+    "Үлкен жол — кішкентай қадамнан басталады.",
+    "Қазір істесең — ертең рахатын көресің.",
+    "Армандар әрекетсіз орындалмайды.",
+    "Тек өзіңе сен, бәрі өз қолыңда.",
+    "Әр күнің — жаңа мүмкіндік.",
+    "Қателесу — үйренудің бір жолы.",
+    "Уақыт — ең қымбат ресурс, босқа жіберме.",
+    "Кішкентай жеңістер үлкен табысқа апарады."
+  ];
+
+  // Күн сайын өзгеріп тұратын цитата
+  function showQuote() {
+    const day = new Date().getDay(); // 0 - жексенбі, 6 - сенбі
+    const quote = quotes[day % quotes.length];
+    document.getElementById('dailyQuote').textContent = `"${quote}"`;
+  }
+
+  function addTask(name = "", checks = []) {
+    const taskName = name || prompt("Тапсырма атауын енгізіңіз:");
+    if (!taskName) return;
+
+    const row = document.createElement('tr');
+    let cells = `<td>${taskName}</td>`;
+    for (let i = 0; i < 7; i++) {
+      const checked = checks[i] ? "checked" : "";
+      cells += `<td><input type="checkbox" ${checked} onchange="updateProgress(this)"></td>`;
+    }
+    cells += `<td class="percentage">0%</td>`;
+    cells += `<td><button class="delete-btn" onclick="deleteTask(this)">Жою</button></td>`;
+    row.innerHTML = cells;
+    document.getElementById('taskBody').appendChild(row);
+    updateProgress(row.querySelector('input'));
+    saveTasks();
+  }
+
+  function updateProgress(checkbox) {
+    const row = checkbox.closest('tr');
+    const checkboxes = row.querySelectorAll('input[type="checkbox"]');
+    const percentCell = row.querySelector('.percentage');
+    let checked = 0;
+    checkboxes.forEach(cb => {
+      if (cb.checked) checked++;
+    });
+    const percent = Math.round((checked / 7) * 100);
+    percentCell.textContent = percent + '%';
+    saveTasks();
+  }
+
+  function deleteTask(button) {
+    if (confirm("Бұл тапсырманы өшіреміз бе?")) {
+      const row = button.closest('tr');
+      row.remove();
+      saveTasks();
+    }
+  }
+
+  function saveTasks() {
+    const tasks = [];
+    const rows = document.querySelectorAll('#taskBody tr');
+    rows.forEach(row => {
+      const name = row.cells[0].textContent;
+      const checks = Array.from(row.querySelectorAll('input[type="checkbox"]')).map(cb => cb.checked);
+      tasks.push({ name, checks });
+    });
+    localStorage.setItem('weeklyTasks', JSON.stringify(tasks));
+  }
+
+  function loadTasks() {
+    const tasks = JSON.parse(localStorage.getItem('weeklyTasks')) || [];
+    tasks.forEach(task => addTask(task.name, task.checks));
+  }
+
+  showQuote();
+  loadTasks();
+</script>
+
+</body>
+</html>
